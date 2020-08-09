@@ -44,36 +44,31 @@ class TileBoard extends Component {
         return [-1, -1];
     }
 
-    //https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
     shuffle_2d(board) {
 
         const num_rows = board.length;
         const num_cols = board[0].length;
 
-        const swap_vectors = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-        const num_shuffles_per_tile = 2 * num_rows;
+        const swap_vectors = [[0, -1], [-1, 0], [0, 1], [1, 0]];
+        const num_shuffles = num_rows * num_cols * num_rows * num_cols;
 
-        for(let row = 0; row < board.length; row ++ ){
-            for(let col = 0; col < board[row].length; col ++){
-                let curr_row = row;
-                let curr_col = col;
-                for(let shuffle_num = 0; shuffle_num < num_shuffles_per_tile; shuffle_num ++){
-                    let vector_idx = Math.floor(4 * Math.random());
-                    while(!this.is_in_bounds(num_rows, num_cols, [curr_row, curr_col], swap_vectors[vector_idx])) {
-                        vector_idx = Math.floor(4 * Math.random());
-                    }
-                    let next_row = curr_row + swap_vectors[vector_idx][0];
-                    let next_col = curr_col + swap_vectors[vector_idx][1];
+        let curr_row = 0;
+        let curr_col = 0;
+        for(let shuffle_num = 0; shuffle_num < num_shuffles; shuffle_num ++){
 
-                    let tmp_val = board[curr_row][curr_col];
-                    board[curr_row][curr_col] = board[next_row][next_col];
-                    board[next_row][next_col] = tmp_val;
-
-                    curr_row = next_row;
-                    curr_col = next_col;
-                }
-
+            let vector_idx = Math.floor(4 * Math.random());
+            while(!this.is_in_bounds(num_rows, num_cols, [curr_row, curr_col], swap_vectors[vector_idx])) {
+                vector_idx = Math.floor(4 * Math.random());
             }
+            let next_row = curr_row + swap_vectors[vector_idx][0];
+            let next_col = curr_col + swap_vectors[vector_idx][1];
+
+            let tmp_val = board[curr_row][curr_col];
+            board[curr_row][curr_col] = board[next_row][next_col];
+            board[next_row][next_col] = tmp_val;
+
+            curr_row = next_row;
+            curr_col = next_col;
         }
     }
 
@@ -104,7 +99,7 @@ class TileBoard extends Component {
         const pixel_border_size = 1;
 
         console.log(board);
-
+        ctx.clearRect(0, 0, this.tileBoardRef.current.width, this.tileBoardRef.current.height);
         for(let row = 0; row < num_rows; row ++){
             for(let col = 0; col < num_cols; col ++){
                 const tile_value = board[row][col];
@@ -137,7 +132,7 @@ class TileBoard extends Component {
                             pixel_upper_left_row + pixel_border_size, 
                             pixel_size - pixel_border_size, 
                             pixel_size - pixel_border_size);
-        canvas_ctx.font = "30px Arial";
+        canvas_ctx.font = "20px Arial";
         canvas_ctx.fillStyle = 'black';
         canvas_ctx.fillText(tile_value, pixel_upper_left_col + 3, pixel_upper_left_row + pixel_size - 3);
     }
@@ -148,7 +143,7 @@ class TileBoard extends Component {
             board: this.instantiateBoard()
         })
 
-        document.addEventListener("keydown", (e) => this._handleKeyDown(e));
+        document.addEventListener("keydown", this._handleKeyDown);
 
     }
 
@@ -212,7 +207,7 @@ class TileBoard extends Component {
         console.log(board_copy);
 
         if(this.has_won(board_copy)){
-            console.log('won!');
+            document.removeEventListener("keydown", this._handleKeyDown);
             this.props.has_won_callback();
         }
 

@@ -19,7 +19,6 @@ const Score = props => {
                 placeholder="0"
                 value={props.best_score}
             />
-            
         </div>
     )
 }
