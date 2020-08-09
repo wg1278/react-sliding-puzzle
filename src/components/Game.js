@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import TileBoard from './TileBoard';
 import Score from './Score';
 import ConfigurationModal from './ConfigurationModal';
@@ -17,7 +16,8 @@ class Game extends Component {
             best_score: 0,
             show_config_modal: true,
             show_play_again_modal: false,
-            reset_board: true
+            reset_board: false,
+            board_size: 4
         }
 
         this.has_won = this.has_won.bind(this);
@@ -26,10 +26,7 @@ class Game extends Component {
         this.play_again_modal_close_callback = this.play_again_modal_close_callback.bind(this);
         this.play_again_modal_true_callback = this.play_again_modal_true_callback.bind(this);
         this.reset_board_callback = this.reset_board_callback.bind(this);
-    }
-
-    static propTypes = {
-        board_dimension: PropTypes.number
+        this.update_board_size = this.update_board_size.bind(this);
     }
 
     has_won() {
@@ -66,7 +63,8 @@ class Game extends Component {
 
     config_modal_close_callback() {
         this.setState({
-            show_config_modal: false
+            show_config_modal: false,
+            reset_board: true
         });
     }
 
@@ -85,17 +83,33 @@ class Game extends Component {
         });
     }
 
+    update_board_size = (e) => {
+        const new_board_size = parseInt(e.target.value);
+
+        if (this.state.board_size !== new_board_size){
+            this.setState({
+                board_size: new_board_size,
+                best_score: 0
+            });
+        }
+    }
+
     render() {
-        const { board_dimension } = this.props;
-        const { curr_score, best_score, show_config_modal, show_play_again_modal, reset_board } = this.state; 
+        const { curr_score, best_score, show_config_modal, show_play_again_modal, reset_board, board_size } = this.state; 
         return (
             <div>
                 <Score curr_score={curr_score} best_score={best_score}/>
-                {reset_board && <TileBoard reset_board={reset_board} num_rows={board_dimension} num_cols={board_dimension} has_won_callback={this.has_won} reset_board_callback={this.reset_board_callback}
-                        update_score_callback={this.update_score}></TileBoard>}
-                <ConfigurationModal show={show_config_modal} close_callback={this.config_modal_close_callback}/>
-                <PlayAgainModal show={show_play_again_modal} close_callback={this.play_again_modal_close_callback}
-                                play_again_callback={this.play_again_modal_true_callback}/>
+                {reset_board && <TileBoard reset_board={reset_board} num_rows={board_size} 
+                                           num_cols={board_size} has_won_callback={this.has_won} 
+                                           reset_board_callback={this.reset_board_callback}
+                                           update_score_callback={this.update_score}/>}
+                <ConfigurationModal curr_board_size={board_size} show={show_config_modal} 
+                                    close_callback={this.config_modal_close_callback}
+                                    update_board_size_callback={this.update_board_size}/>
+                <PlayAgainModal curr_board_size={board_size} show={show_play_again_modal} 
+                                close_callback={this.play_again_modal_close_callback}
+                                play_again_callback={this.play_again_modal_true_callback}
+                                update_board_size_callback={this.update_board_size}/>
             </div>
         )
     }

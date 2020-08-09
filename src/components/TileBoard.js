@@ -10,7 +10,7 @@ class TileBoard extends Component {
         this.state = {
             board: [],
             blank_tile_coordinate: [-1, -1],
-            canvas_pixel_dimension: 300
+            canvas_pixel_dimension: 500
         };
     }
     
@@ -71,6 +71,22 @@ class TileBoard extends Component {
             curr_row = next_row;
             curr_col = next_col;
         }
+
+        while(this.has_won(board)){
+            let vector_idx = Math.floor(4 * Math.random());
+            while(!this.is_in_bounds(num_rows, num_cols, [curr_row, curr_col], swap_vectors[vector_idx])) {
+                vector_idx = Math.floor(4 * Math.random());
+            }
+            let next_row = curr_row + swap_vectors[vector_idx][0];
+            let next_col = curr_col + swap_vectors[vector_idx][1];
+
+            let tmp_val = board[curr_row][curr_col];
+            board[curr_row][curr_col] = board[next_row][next_col];
+            board[next_row][next_col] = tmp_val;
+
+            curr_row = next_row;
+            curr_col = next_col;
+        }
     }
 
     get_next_coordinate(curr_row, curr_col, swap_vector){
@@ -99,12 +115,10 @@ class TileBoard extends Component {
         const pixel_size = canvas_pixel_dimension / num_rows;
         const pixel_border_size = 1;
 
-        console.log(board);
         ctx.clearRect(0, 0, this.tileBoardRef.current.width, this.tileBoardRef.current.height);
         for(let row = 0; row < num_rows; row ++){
             for(let col = 0; col < num_cols; col ++){
                 const tile_value = board[row][col];
-                console.log(tile_value);
                 this.generateCanvasTile(ctx, tile_value, pixel_size, pixel_border_size, row * pixel_size, col * pixel_size);
             }
         }
@@ -163,14 +177,11 @@ class TileBoard extends Component {
                 this.swap(this.state, 'down');
                 break;
             default:
-                console.log('wrong key');
                 break;
         }
     }
 
     swap = (state, key_direction) => {
-
-        console.log(key_direction);
         
         let swap_vector;
 
@@ -204,8 +215,6 @@ class TileBoard extends Component {
         const val_to_Swap_with_blank = board_copy[new_blank_row][new_blank_col];
         board_copy[new_blank_row][new_blank_col] = 0;
         board_copy[blank_tile_coordinate[0]][blank_tile_coordinate[1]] = val_to_Swap_with_blank;
-
-        console.log(board_copy);
 
         this.props.update_score_callback();
 
