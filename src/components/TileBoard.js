@@ -15,29 +15,20 @@ class TileBoard extends Component {
     
     static propTypes = {
         num_rows: PropTypes.number,
-        num_cols: PropTypes.number
+        num_cols: PropTypes.number,
+        has_won_callback: PropTypes.func
     }
 
     instantiateBoard() {
         const { num_rows, num_cols } = this.props;
-        const numTiles = num_rows * num_cols;
-        let board_numbers = this.populateBoardNumbers(numTiles);
-        this.shuffle(board_numbers);
-        const board_2d = this.build2DBoard(num_rows, num_cols, board_numbers);
+        const board_2d = this.build2DBoard(num_rows, num_cols);
+        this.shuffle_2d(board_2d);
 
         this.setState({
             blank_tile_coordinate: this.locate_blank_tile_coordinate(board_2d)
         });
 
         return board_2d;
-    }
-
-    populateBoardNumbers(numTiles){
-        let board_numbers = [];
-        for(let i = 0; i < numTiles; i++){
-            board_numbers.push(i);
-        }
-        return board_numbers;
     }
 
     locate_blank_tile_coordinate = (board) => {
@@ -52,34 +43,52 @@ class TileBoard extends Component {
     }
 
     //https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-    shuffle(array) {
-        let currentIndex = array.length, temporaryValue, randomIndex;
-        
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-        
-            // Pick a remaining element...
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-        
-            // And swap it with the current element.
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
+    shuffle_2d(board) {
+
+        const num_rows = board.length;
+        const num_cols = board[0].length;
+
+        const swap_vectors = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+        const num_shuffles_per_tile = 2 * num_rows;
+
+        for(let row = 0; row < board.length; row ++ ){
+            for(let col = 0; col < board[row].length; col ++){
+                let curr_row = row;
+                let curr_col = col;
+                for(let shuffle_num = 0; shuffle_num < num_shuffles_per_tile; shuffle_num ++){
+                    let vector_idx = Math.floor(4 * Math.random());
+                    while(!this.is_in_bounds(num_rows, num_cols, [curr_row, curr_col], swap_vectors[vector_idx])) {
+                        vector_idx = Math.floor(4 * Math.random());
+                    }
+                    let next_row = curr_row + swap_vectors[vector_idx][0];
+                    let next_col = curr_col + swap_vectors[vector_idx][1];
+
+                    let tmp_val = board[curr_row][curr_col];
+                    board[curr_row][curr_col] = board[next_row][next_col];
+                    board[next_row][next_col] = tmp_val;
+
+                    curr_row = next_row;
+                    curr_col = next_col;
+                }
+
+            }
         }
     }
 
-    build2DBoard(num_rows, num_cols, board_numbers){
-        console.log(board_numbers);
+    get_next_coordinate(curr_row, curr_col, swap_vector){
+        return (curr_row + swap_vector[0], curr_col + swap_vector[1]);
+    }
+
+    build2DBoard(num_rows, num_cols){
         let board = [];
-        let index = 0;
+        let curr_num = 0;
         for(let row = 0; row < num_rows; row ++){
-            let row = [];
+            let curr_row = [];
             for(let col = 0; col < num_cols; col ++ ){
-                row.push(board_numbers[index]);
-                index++;
+                curr_row.push(curr_num);
+                curr_num++;
             }
-            board.push(row);
+            board.push(curr_row);
         }
         return board;
     }
@@ -92,25 +101,43 @@ class TileBoard extends Component {
         const pixel_size = canvas_pixel_dimension / num_rows;
         const pixel_border_size = 1;
 
+        console.log(board);
+
         for(let row = 0; row < num_rows; row ++){
             for(let col = 0; col < num_cols; col ++){
                 const tile_value = board[row][col];
+                console.log(tile_value);
                 this.generateCanvasTile(ctx, tile_value, pixel_size, pixel_border_size, row * pixel_size, col * pixel_size);
             }
         }
+
+    }
+    
+
+    has_won(board){
+        let curr_num = 0;
+        for(let row = 0; row < board.length; row ++){
+            for(let col = 0; col < board[row].length; col ++){
+                if(board[row][col] !== curr_num){
+                    return false;
+                }
+                curr_num++;
+            }
+        }
+        return true;
     }
 
     generateCanvasTile(canvas_ctx, tile_value, pixel_size, pixel_border_size, pixel_upper_left_row, pixel_upper_left_col) {
         canvas_ctx.fillStyle = 'black';
-        canvas_ctx.fillRect(pixel_upper_left_row, pixel_upper_left_col, pixel_size, pixel_size);
+        canvas_ctx.fillRect(pixel_upper_left_col, pixel_upper_left_row, pixel_size, pixel_size);
         canvas_ctx.fillStyle = 'green';
-        canvas_ctx.fillRect(pixel_upper_left_row + pixel_border_size, 
-                            pixel_upper_left_col + pixel_border_size, 
+        canvas_ctx.fillRect(pixel_upper_left_col + pixel_border_size, 
+                            pixel_upper_left_row + pixel_border_size, 
                             pixel_size - pixel_border_size, 
                             pixel_size - pixel_border_size);
         canvas_ctx.font = "30px Arial";
         canvas_ctx.fillStyle = 'black';
-        canvas_ctx.fillText(tile_value, pixel_upper_left_row + 3, pixel_upper_left_col + pixel_size - 3);
+        canvas_ctx.fillText(tile_value, pixel_upper_left_col + 3, pixel_upper_left_row + pixel_size - 3);
     }
 
     componentDidMount() {
@@ -150,21 +177,19 @@ class TileBoard extends Component {
         let swap_vector;
 
         if (key_direction === 'left'){
-            swap_vector = [-1, 0];
+            swap_vector = [0, -1];
         }
         else if (key_direction === 'up'){
-            swap_vector = [0, -1]; 
+            swap_vector = [-1, 0]; 
         }
         else if (key_direction === 'right') {
-            swap_vector = [1, 0];
+            swap_vector = [0, 1];
         }
         else if (key_direction === 'down') {
-            swap_vector = [0, 1];
+            swap_vector = [1, 0];
         }
 
         const { board, blank_tile_coordinate } = state;
-
-        console.log(board, blank_tile_coordinate);
 
         const num_rows = board.length;
         const num_cols = board[0].length;
@@ -181,6 +206,13 @@ class TileBoard extends Component {
         const val_to_Swap_with_blank = board_copy[new_blank_row][new_blank_col];
         board_copy[new_blank_row][new_blank_col] = 0;
         board_copy[blank_tile_coordinate[0]][blank_tile_coordinate[1]] = val_to_Swap_with_blank;
+
+        console.log(board_copy);
+
+        if(this.has_won(board_copy)){
+            console.log('won!');
+            this.props.has_won_callback();
+        }
 
         this.setState({
             blank_tile_coordinate: [new_blank_row, new_blank_col],

@@ -5,7 +5,7 @@ import Game from './components/Game';
 function App() {
 
   return (
-    <Game board_dimension={5}></Game>
+    <Game board_dimension={3}></Game>
   );
 }
 
