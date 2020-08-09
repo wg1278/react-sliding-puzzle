@@ -18,7 +18,8 @@ class TileBoard extends Component {
         num_rows: PropTypes.number,
         num_cols: PropTypes.number,
         has_won_callback: PropTypes.func,
-        update_score_callback: PropTypes.func
+        update_score_callback: PropTypes.func,
+        reset_board_callback: PropTypes.func
     }
 
     instantiateBoard() {
@@ -211,6 +212,7 @@ class TileBoard extends Component {
         if(this.has_won(board_copy)){
             document.removeEventListener("keydown", this._handleKeyDown);
             this.props.has_won_callback();
+            this.props.reset_board_callback();
         }
 
  
