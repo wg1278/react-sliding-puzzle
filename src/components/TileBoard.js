@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import './../App.css';
 
 class TileBoard extends Component {
 
@@ -16,7 +17,8 @@ class TileBoard extends Component {
     static propTypes = {
         num_rows: PropTypes.number,
         num_cols: PropTypes.number,
-        has_won_callback: PropTypes.func
+        has_won_callback: PropTypes.func,
+        update_score_callback: PropTypes.func
     }
 
     instantiateBoard() {
@@ -214,6 +216,8 @@ class TileBoard extends Component {
             this.props.has_won_callback();
         }
 
+        this.props.update_score_callback();
+
         this.setState({
             blank_tile_coordinate: [new_blank_row, new_blank_col],
             board: board_copy
@@ -251,7 +255,7 @@ class TileBoard extends Component {
 
         const { canvas_pixel_dimension } = this.state;
         return (
-            <canvas ref={this.tileBoardRef} width={canvas_pixel_dimension} height={canvas_pixel_dimension}/>
+            <canvas id="myCanvas" ref={this.tileBoardRef} width={canvas_pixel_dimension} height={canvas_pixel_dimension}/>
         )
     }
 }
