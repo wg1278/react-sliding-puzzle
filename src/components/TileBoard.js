@@ -206,12 +206,14 @@ class TileBoard extends Component {
 
         console.log(board_copy);
 
+        this.props.update_score_callback();
+
         if(this.has_won(board_copy)){
             document.removeEventListener("keydown", this._handleKeyDown);
             this.props.has_won_callback();
         }
 
-        this.props.update_score_callback();
+ 
 
         this.setState({
             blank_tile_coordinate: [new_blank_row, new_blank_col],

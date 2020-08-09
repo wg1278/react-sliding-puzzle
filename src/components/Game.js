@@ -25,8 +25,20 @@ class Game extends Component {
     }
 
     has_won() {
+
+        const { curr_score, best_score } = this.state;
+        
+        let tmp_best_score;
+        if (best_score == 0){
+            tmp_best_score = curr_score;
+        }
+        else{
+            tmp_best_score = Math.min(curr_score, best_score);
+        }
+
         this.setState({
-            won: true
+            won: true,
+            best_score: tmp_best_score
         });
     }
 
